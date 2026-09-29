@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://b5yclmveiy6gh"]
+
+[ext_resource type="Script" uid="uid://dmvw5hih01cyx" path="res://GodotCredits.gd" id="1_jet1m"]
+
+[node name="GodotCredits" type="Node2D" unique_id=519834096]
+script = ExtResource("1_jet1m")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=581235653]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 500.0
+offset_bottom = 5000.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(28.88, 1)
+color = Color(0, 0, 0, 1)
+
+[node name="CreditsContainer" type="Control" parent="." unique_id=318776455]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Line" type="Label" parent="CreditsContainer" unique_id=799106238]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 15.0
+offset_right = 1153.0
+offset_bottom = 653.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 50
+text = "Credits line"
+horizontal_alignment = 1
