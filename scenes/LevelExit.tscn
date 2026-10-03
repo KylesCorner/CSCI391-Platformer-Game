@@ -6,7 +6,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_28di1"]
 size = Vector2(16, 30)
 
-[node name="LevelExit" type="Area2D" unique_id=1819292727]
+[node name="LevelExit" type="StaticBody2D" unique_id=1584234970]
 script = ExtResource("1_arm25")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1235094206]

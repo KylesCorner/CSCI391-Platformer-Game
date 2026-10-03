@@ -9,8 +9,9 @@
 [ext_resource type="PackedScene" uid="uid://cthwbob4eu23n" path="res://scenes/enemy.tscn" id="6_1b6n0"]
 [ext_resource type="Script" uid="uid://jna7soqkgogi" path="res://scripts/PlayerSpawn.gd" id="8_ygp6w"]
 [ext_resource type="PackedScene" uid="uid://400e6kvxy55c" path="res://scenes/LevelExit.tscn" id="9_xna0i"]
+[ext_resource type="PackedScene" uid="uid://b17tmbw3j4tse" path="res://scenes/Level02.tscn" id="10_c787t"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rhow8"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_c787t"]
 texture = ExtResource("1_5itje")
 0:0/0 = 0
 0:0/0/terrain_set = 0
@@ -255,7 +256,7 @@ physics_layer_0/collision_layer = 1
 terrain_set_0/mode = 0
 terrain_set_0/terrain_0/name = "Terrain Grass"
 terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
-sources/0 = SubResource("TileSetAtlasSource_rhow8")
+sources/0 = SubResource("TileSetAtlasSource_c787t")
 
 [node name="Level 1" type="Node2D" unique_id=750612590]
 
@@ -314,12 +315,12 @@ position = Vector2(124, 72)
 [node name="Enemy" parent="Enemies" unique_id=51900911 instance=ExtResource("6_1b6n0")]
 
 [node name="SpawnPoints" type="Node2D" parent="." unique_id=340923281]
-visible = false
 position = Vector2(-139, 70)
 
 [node name="Start" type="Marker2D" parent="SpawnPoints" unique_id=343049763]
-position = Vector2(66, -5)
+position = Vector2(19, 0)
 script = ExtResource("8_ygp6w")
 
 [node name="LevelExit" parent="." unique_id=1819292727 instance=ExtResource("9_xna0i")]
 position = Vector2(46, -238)
+next_level = ExtResource("10_c787t")

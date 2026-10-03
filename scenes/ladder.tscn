@@ -1,20 +1,24 @@
 [gd_scene format=3 uid="uid://l77hcds3cxp5"]
 
 [ext_resource type="Script" uid="uid://b06py6s3achwr" path="res://scripts/ladder.gd" id="1_lqhsa"]
-[ext_resource type="Texture2D" uid="uid://e42fgqsaiml2" path="res://assets/Dungeon Tile Set.png" id="2_efw3x"]
+[ext_resource type="Texture2D" uid="uid://dd1hstfirwyxg" path="res://assets/world_tileset.png" id="2_xb1tl"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3kgug"]
 size = Vector2(14, 49)
 
 [node name="Ladder" type="Area2D" unique_id=1474640371]
+collision_layer = 4
+collision_mask = 7
 script = ExtResource("1_lqhsa")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1371886204]
-position = Vector2(1.5, 0.5)
-scale = Vector2(1, 2.6111112)
-texture = ExtResource("2_efw3x")
+visibility_layer = 3
+z_index = -1
+position = Vector2(1.5, 0.50000036)
+scale = Vector2(1, 1.2249999)
+texture = ExtResource("2_xb1tl")
 region_enabled = true
-region_rect = Rect2(80.22861, 142.25468, 15.318573, 18.888657)
+region_rect = Rect2(97.152275, 48.569782, 14.222954, 40.26713)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=985852827]
 position = Vector2(1.5, 0.5)

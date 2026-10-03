@@ -67,6 +67,8 @@ animations = [{
 }]
 
 [node name="Pumpkin" type="RigidBody2D" unique_id=865692775]
+collision_layer = 4
+collision_mask = 7
 script = ExtResource("1_ch6vm")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=138146118]

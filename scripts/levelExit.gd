@@ -1,39 +1,57 @@
-extends Area2D
+class_name LevelExit
+extends StaticBody2D
+
 
 @export var next_level: PackedScene
+
 
 var triggered: bool = false
 
 
 func _ready() -> void:
-	body_entered.connect(
-		_on_body_entered
-	)
+	add_to_group("interactable")
+	add_to_group("level_exit")
 
 
-func _on_body_entered(body: Node2D) -> void:
+#
+# ============================================================
+# INTERACT
+# ============================================================
+#
+
+func interact(
+	player: Node
+) -> void:
 	#
-	# Prevent the exit from triggering multiple times.
+	# Prevent multiple level changes.
 	#
 	if triggered:
 		return
 
-	#
-	# Only the player can activate the exit.
-	#
-	if not body.is_in_group("player"):
-		return
 
 	#
-	# Make sure a destination was configured.
+	# Only the player should be able to use the door.
+	#
+	if player == null:
+		return
+
+	if not player.is_in_group("player"):
+		return
+
+
+	#
+	# Make sure a destination was assigned.
 	#
 	if next_level == null:
 		push_warning(
 			"LevelExit has no next_level assigned."
 		)
+
 		return
 
+
 	triggered = true
+
 
 	LevelManager.change_level(
 		next_level

@@ -1,0 +1,81 @@
+[gd_scene format=3 uid="uid://rbmsmakvkhg7"]
+
+[ext_resource type="Script" uid="uid://doayc16krmre5" path="res://health_potion.gd" id="1_np0hw"]
+[ext_resource type="Texture2D" uid="uid://dktqfxu1vndrf" path="res://assets/health_potion.png" id="2_a6wep"]
+[ext_resource type="Texture2D" uid="uid://bdaut2bg8i6c8" path="res://assets/smoke/FX001_01.png" id="3_oo0wb"]
+[ext_resource type="Texture2D" uid="uid://doxbkmelre0v8" path="res://assets/smoke/FX001_02.png" id="4_bfq1p"]
+[ext_resource type="Texture2D" uid="uid://dl8y6df6u4uc" path="res://assets/smoke/FX001_03.png" id="5_ot1h5"]
+[ext_resource type="Texture2D" uid="uid://dixk2gdpesn6j" path="res://assets/smoke/FX001_04.png" id="6_jtgv0"]
+[ext_resource type="Texture2D" uid="uid://ditkeoq7mcx76" path="res://assets/smoke/FX001_05.png" id="7_ydb1u"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_28di1"]
+size = Vector2(8, 14)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k6i76"]
+atlas = ExtResource("3_oo0wb")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yaqls"]
+atlas = ExtResource("4_bfq1p")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_prq7c"]
+atlas = ExtResource("5_ot1h5")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ymynu"]
+atlas = ExtResource("6_jtgv0")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ktfqd"]
+atlas = ExtResource("7_ydb1u")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knmy7"]
+atlas = ExtResource("2_a6wep")
+region = Rect2(0, 0, 8, 14)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_28di1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k6i76")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yaqls")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_prq7c")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ymynu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ktfqd")
+}],
+"loop": 0,
+"name": &"Drink",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knmy7")
+}],
+"loop": 0,
+"name": &"Idle",
+"speed": 5.0
+}]
+
+[node name="HealthPotion" type="RigidBody2D" unique_id=1005827394]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("1_np0hw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=745351311]
+scale = Vector2(1.15, 1.15)
+shape = SubResource("RectangleShape2D_28di1")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1832083540]
+scale = Vector2(1.15, 1.15)
+sprite_frames = SubResource("SpriteFrames_28di1")
+animation = &"Idle"

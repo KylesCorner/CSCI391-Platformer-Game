@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dlgxqah00um31" path="res://scripts/hud.gd" id="3_kek77"]
 [ext_resource type="Texture2D" uid="uid://mmahnkbtvbkp" path="res://assets/healthbar.png" id="4_4c57u"]
 [ext_resource type="PackedScene" uid="uid://dbmpnguo7nyhk" path="res://scenes/player.tscn" id="5_7mycd"]
-[ext_resource type="PackedScene" uid="uid://btk010561twgd" path="res://scenes/level_01.tscn" id="7_ycdy4"]
+[ext_resource type="PackedScene" uid="uid://duqkju7aad1va" path="res://scenes/Level00.tscn" id="6_7mycd"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2h3vt"]
 atlas = ExtResource("4_4c57u")
@@ -84,8 +84,8 @@ sprite_frames = SubResource("SpriteFrames_28di1")
 animation = &"Health"
 
 [node name="Player" parent="." unique_id=795122208 instance=ExtResource("5_7mycd")]
-position = Vector2(-68, 66)
+position = Vector2(-1013, 94)
 
 [node name="CurrentLevel" type="Node2D" parent="." unique_id=233822910]
 
-[node name="Level 1" parent="CurrentLevel" unique_id=750612590 instance=ExtResource("7_ycdy4")]
+[node name="Level 0" parent="CurrentLevel" unique_id=854963170 instance=ExtResource("6_7mycd")]

@@ -935,32 +935,94 @@ func try_attack_blocking_pumpkin(
 	if attack_cooldown_remaining > 0.0:
 		return false
 
+
 	#
-	# Put the hitbox in front of the enemy.
+	# Do NOT depend on AttackHitbox overlap here.
 	#
-	update_attack_hitbox_position(
-		direction
+	# We find grounded pumpkins directly so the enemy begins
+	# its attack BEFORE physically walking into/pushing one.
+	#
+	var pumpkins: Array[Node] = (
+		get_tree().get_nodes_in_group(
+			"pumpkin"
+		)
 	)
 
-	#
-	# Make sure the transform is current before
-	# asking for overlapping bodies.
-	#
-	attack_hitbox.force_update_transform()
 
-	var bodies := (
-		attack_hitbox.get_overlapping_bodies()
+	var best_pumpkin: Pumpkin = null
+	var best_distance: float = INF
+
+
+	for node: Node in pumpkins:
+		var pumpkin := node as Pumpkin
+
+		if pumpkin == null:
+			continue
+
+		if not is_instance_valid(pumpkin):
+			continue
+
+		if not pumpkin.can_be_attacked_by_enemy():
+			continue
+
+
+		var offset: Vector2 = (
+			pumpkin.global_position
+			- global_position
+		)
+
+
+		#
+		# Pumpkin must be in the direction we're walking.
+		#
+		if signf(offset.x) != signf(direction):
+			continue
+
+
+		#
+		# Keep detection approximately on the same platform.
+		#
+		if absf(offset.y) > 16.0:
+			continue
+
+
+		var horizontal_distance: float = (
+			absf(offset.x)
+		)
+
+
+		#
+		# Detect it slightly BEFORE physical contact.
+		#
+		if horizontal_distance > 32.0:
+			continue
+
+
+		if horizontal_distance < best_distance:
+			best_distance = horizontal_distance
+			best_pumpkin = pumpkin
+
+
+	if best_pumpkin == null:
+		return false
+
+
+	#
+	# VERY IMPORTANT:
+	#
+	# As soon as the enemy commits to attacking this
+	# grounded pumpkin, it can no longer count as a
+	# thrown weapon.
+	#
+	best_pumpkin.disarm_as_weapon()
+
+
+	start_attack(
+		best_pumpkin
 	)
 
-	for body: Node2D in bodies:
-		if body is Pumpkin:
-			start_attack(
-				body
-			)
 
-			return true
-
-	return false
+	return true
 
 
 #
@@ -990,53 +1052,110 @@ func _on_sprite_frame_changed() -> void:
 # APPLY ATTACK
 # ============================================================
 #
+func is_attacking_target(
+	target: Node
+) -> bool:
+	if ai_state != AIState.ATTACKING:
+		return false
 
+	if attack_target == null:
+		return false
+
+	if not is_instance_valid(
+		attack_target
+	):
+		return false
+
+	return attack_target == target
+	
 func try_apply_attack_damage() -> void:
 	if attack_target == null:
 		return
 
-	if not is_instance_valid(attack_target):
+	if not is_instance_valid(
+		attack_target
+	):
 		attack_target = null
 		return
 
-	var bodies := (
-		attack_hitbox.get_overlapping_bodies()
-	)
 
-	for body: Node2D in bodies:
-		if body != attack_target:
-			continue
+	#
+	# ========================================================
+	# PUMPKIN
+	# ========================================================
+	#
+	# The enemy already committed to this pumpkin when
+	# start_attack() was called.
+	#
+	# Destroy it directly on the active attack frame.
+	#
+	if attack_target is Pumpkin:
+		var pumpkin := (
+			attack_target as Pumpkin
+		)
+
+
+		if not is_instance_valid(pumpkin):
+			attack_target = null
+			return
+
 
 		#
-		# ====================================================
-		# PUMPKIN
-		# ====================================================
+		# Make sure it hasn't somehow moved far away
+		# during the attack animation.
 		#
-		# Enemy destroys pumpkins in one hit.
-		#
-		if body is Pumpkin:
-			body.destroy()
+		var offset: Vector2 = (
+			pumpkin.global_position
+			- global_position
+		)
+
+
+		if (
+			absf(offset.x) <= 40.0
+			and absf(offset.y) <= 20.0
+		):
+			pumpkin.destroy_by_enemy()
 
 			attack_damage_applied = true
 
 			attack_target = null
 
-			return
 
-		#
-		# ====================================================
-		# PLAYER / OTHER DAMAGEABLE OBJECT
-		# ====================================================
-		#
+		return
 
-		if body.has_method("take_damage"):
-			body.take_damage(
-				attack_damage
-			)
 
-			attack_damage_applied = true
+	#
+	# ========================================================
+	# PLAYER
+	# ========================================================
+	#
+	# Player attacks can continue using the physical
+	# AttackHitbox.
+	#
 
-			return
+	var bodies := (
+		attack_hitbox.get_overlapping_bodies()
+	)
+
+
+	for body: Node2D in bodies:
+		if body != attack_target:
+			continue
+
+		if not body.has_method(
+			"take_damage"
+		):
+			continue
+
+
+		body.take_damage(
+			attack_damage
+		)
+
+
+		attack_damage_applied = true
+
+		return
 
 
 #

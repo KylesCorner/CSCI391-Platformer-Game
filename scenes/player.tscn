@@ -215,6 +215,8 @@ animations = [{
 }]
 
 [node name="Player" type="CharacterBody2D" unique_id=795122208 groups=["player"]]
+collision_layer = 2
+collision_mask = 5
 script = ExtResource("1_g2els")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1891910187]
@@ -236,11 +238,14 @@ speed_scale = 1.5
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1474951815]
 
 [node name="HoldPoint" type="Marker2D" parent="." unique_id=1427148666]
+position = Vector2(12, -4)
 
 [node name="PickupRay" type="RayCast2D" parent="." unique_id=1007026934]
-target_position = Vector2(12, 0)
+target_position = Vector2(17, 0)
+collision_mask = 4
 
 [node name="DoubleJump" type="AnimatedSprite2D" parent="." unique_id=1547451698]
+visible = false
 position = Vector2(0, 5)
 scale = Vector2(1, 0.5625)
 sprite_frames = SubResource("SpriteFrames_28di1")

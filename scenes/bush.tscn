@@ -9,6 +9,8 @@ load_path = "res://.godot/imported/world_tileset.png-43b294f106264424c84ae223dbc
 size = Vector2(17, 18)
 
 [node name="Bush" type="Area2D" unique_id=1824502961]
+collision_layer = 4
+collision_mask = 7
 script = ExtResource("1_8cy4n")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=613596522]
