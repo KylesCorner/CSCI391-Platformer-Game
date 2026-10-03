@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b5yclmveiy6gh"]
 
-[ext_resource type="Script" uid="uid://dmvw5hih01cyx" path="res://GodotCredits.gd" id="1_jet1m"]
+[ext_resource type="Script" uid="uid://dmvw5hih01cyx" path="res://scripts/GodotCredits.gd" id="1_jet1m"]
 
 [node name="GodotCredits" type="Node2D" unique_id=519834096]
 script = ExtResource("1_jet1m")

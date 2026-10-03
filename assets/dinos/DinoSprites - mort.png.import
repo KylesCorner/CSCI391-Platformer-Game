@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://caekdr70ski41"
-path="res://.godot/imported/Soldier_Idle.png-70d3541aed806e5adbdff08448770034.ctex"
+uid="uid://bn54bs7gidpq1"
+path="res://.godot/imported/DinoSprites - mort.png-92704f80f3fb810a61f75171bd741012.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/Soldier_Idle.png"
-dest_files=["res://.godot/imported/Soldier_Idle.png-70d3541aed806e5adbdff08448770034.ctex"]
+source_file="res://assets/dinos/DinoSprites - mort.png"
+dest_files=["res://.godot/imported/DinoSprites - mort.png-92704f80f3fb810a61f75171bd741012.ctex"]
 
 [params]
 

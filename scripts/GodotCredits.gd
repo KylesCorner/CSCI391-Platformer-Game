@@ -2,6 +2,7 @@ extends Control
 
 
 @export var fade_time: float = 0.75
+@onready var hud: CanvasLayer = $"../../HUD"
 
 
 func _ready() -> void:
@@ -20,6 +21,7 @@ func _ready() -> void:
 	# Hidden until the player dies.
 	#
 	visible = false
+	
 
 
 func _build_ui() -> void:
@@ -379,7 +381,13 @@ func _add_spacer(
 	)
 
 
+
 func show_credits() -> void:
+	var hud := get_tree().get_first_node_in_group("hud")
+
+	if hud != null:
+		hud.visible = false
+
 	visible = true
 
 	modulate.a = 0.0
@@ -393,9 +401,13 @@ func show_credits() -> void:
 		fade_time
 	)
 
-
 func hide_credits() -> void:
 	visible = false
+
+	var hud := get_tree().get_first_node_in_group("hud")
+
+	if hud != null:
+		hud.visible = true
 
 
 func _on_restart_pressed() -> void:

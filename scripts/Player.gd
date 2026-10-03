@@ -1,11 +1,20 @@
 extends CharacterBody2D
 
-const SPEED: float = 150.0
+const SPEED: float = 100.0
 const JUMP_VELOCITY: float = -300.0
 
 
 @export var max_health: int = 100
 @export var ladder_speed: float = 180.0
+
+# 2 = normal jump + one mid-air jump.
+@export var max_jumps: int = 2
+
+# Controls how strongly releasing jump cuts the jump short.
+#
+# Lower = shorter tap jump.
+# Higher = smaller difference between tap and hold.
+@export_range(0.1, 1.0, 0.05) var jump_cut_multiplier: float = 0.45
 
 
 var health: int
@@ -17,14 +26,18 @@ var slow_zone_multiplier: float = 1.0
 var ladder_count: int = 0
 var climbing: bool = false
 
+var jumps_remaining: int = 0
+
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 
+
 signal died
+signal health_changed(current_health: int, max_health: int)
+
 
 enum State {
 	NORMAL,
-	ATTACKING,
 	HURT,
 	DEAD
 }
@@ -32,11 +45,16 @@ enum State {
 
 var state: State = State.NORMAL
 
-
 func _ready() -> void:
 	add_to_group("player")
 
 	health = max_health
+	jumps_remaining = max_jumps
+
+	health_changed.emit(
+		health,
+		max_health
+	)
 
 	sprite.play("Idle")
 
@@ -55,10 +73,7 @@ func _physics_process(delta: float) -> void:
 	)
 
 	#
-	# LADDER
-	#
-	# If we're touching a ladder and press up/down,
-	# start climbing.
+	# LADDER ENTRY
 	#
 	if (
 		ladder_count > 0
@@ -68,10 +83,9 @@ func _physics_process(delta: float) -> void:
 		climbing = true
 
 	#
-	# Handle ladder movement before normal movement.
+	# LADDER MOVEMENT
 	#
-	# This is important because pressing UP while touching
-	# a ladder should climb instead of jump.
+	# Ladder movement takes priority over jumping.
 	#
 	if (
 		climbing
@@ -84,41 +98,47 @@ func _physics_process(delta: float) -> void:
 		return
 
 	#
+	# RESET JUMPS
+	#
+	if is_on_floor():
+		jumps_remaining = max_jumps
+
+	#
 	# GRAVITY
 	#
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 
 	#
-	# No normal controls while attacking or hurt.
+	# HURT STATE
 	#
-	if (
-		state == State.ATTACKING
-		or state == State.HURT
-	):
+	if state == State.HURT:
 		move_and_slide()
 		return
 
 	#
-	# ATTACK
-	#
-	if Input.is_action_just_pressed("attack"):
-		attack()
-
-		move_and_slide()
-		return
-
-	#
-	# JUMP
-	#
-	# Up Arrow now jumps when we're NOT using a ladder.
+	# JUMP / DOUBLE JUMP
 	#
 	if (
 		Input.is_action_just_pressed("ui_up")
-		and is_on_floor()
 		and ladder_count == 0
+		and jumps_remaining > 0
 	):
 		velocity.y = JUMP_VELOCITY
+		jumps_remaining -= 1
+		
+
+	#
+	# VARIABLE JUMP HEIGHT
+	#
+	# Releasing jump while moving upward cuts the
+	# remaining upward velocity.
+	#
+	if (
+		Input.is_action_just_released("ui_up")
+		and velocity.y < 0.0
+	):
+		velocity.y *= jump_cut_multiplier
 
 	#
 	# HORIZONTAL MOVEMENT
@@ -162,16 +182,6 @@ func handle_horizontal_movement() -> void:
 func handle_ladder_movement(
 	vertical_direction: float
 ) -> void:
-	#
-	# ui_up produces -1
-	# ui_down produces +1
-	#
-	# Because Godot's +Y direction is downward,
-	# this naturally gives us:
-	#
-	# Up   -> negative Y
-	# Down -> positive Y
-	#
 	velocity.y = (
 		vertical_direction
 		* ladder_speed
@@ -199,6 +209,7 @@ func handle_ladder_movement(
 		or horizontal_direction != 0.0
 	):
 		sprite.play("Walk")
+
 	else:
 		sprite.play("Idle")
 
@@ -230,23 +241,8 @@ func exit_ladder() -> void:
 		0
 	)
 
-	#
-	# Once we're no longer overlapping any ladder,
-	# resume normal movement/gravity.
-	#
 	if ladder_count == 0:
 		climbing = false
-
-
-func attack() -> void:
-	if state != State.NORMAL:
-		return
-
-	state = State.ATTACKING
-
-	velocity.x = 0.0
-
-	sprite.play("Attack")
 
 
 func take_damage(amount: int) -> void:
@@ -260,6 +256,11 @@ func take_damage(amount: int) -> void:
 		0
 	)
 
+	health_changed.emit(
+		health,
+		max_health
+	)
+
 	print(
 		"Health: ",
 		health,
@@ -269,17 +270,20 @@ func take_damage(amount: int) -> void:
 
 	if health <= 0:
 		die()
+
 	else:
 		hurt()
 
 
 func hurt() -> void:
+	if state == State.DEAD:
+		return
+
 	state = State.HURT
 
 	velocity.x = 0.0
 
 	sprite.play("Hurt")
-
 
 
 func die() -> void:
@@ -291,18 +295,11 @@ func die() -> void:
 
 	sprite.play("Death")
 
-	await get_tree().create_timer(1.5).timeout
-
-	died.emit()
-
 
 func _on_animation_finished() -> void:
 	match sprite.animation:
-		"Attack":
-			state = State.NORMAL
-
 		"Hurt":
 			state = State.NORMAL
 
 		"Death":
-			pass
+			died.emit()

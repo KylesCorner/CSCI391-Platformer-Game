@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://400e6kvxy55c"]
 
-[ext_resource type="Script" uid="uid://bbex8od6nxsth" path="res://levelExit.gd" id="1_arm25"]
+[ext_resource type="Script" uid="uid://bbex8od6nxsth" path="res://scripts/levelExit.gd" id="1_arm25"]
 [ext_resource type="Texture2D" uid="uid://e42fgqsaiml2" path="res://assets/Dungeon Tile Set.png" id="2_n8lvt"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_28di1"]

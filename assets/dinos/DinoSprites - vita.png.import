@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://rcms3k2qxjae"
-path="res://.godot/imported/Soldier_Attack03.png-4fd912da587e4332bb2f6748e9f342f3.ctex"
+uid="uid://hs4rjmp8nu8y"
+path="res://.godot/imported/DinoSprites - vita.png-2c1d8d8780da5b424a5d33933c207645.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/Soldier_Attack03.png"
-dest_files=["res://.godot/imported/Soldier_Attack03.png-4fd912da587e4332bb2f6748e9f342f3.ctex"]
+source_file="res://assets/dinos/DinoSprites - vita.png"
+dest_files=["res://.godot/imported/DinoSprites - vita.png-2c1d8d8780da5b424a5d33933c207645.ctex"]
 
 [params]
 
