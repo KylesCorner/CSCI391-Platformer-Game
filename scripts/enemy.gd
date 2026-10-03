@@ -1,18 +1,22 @@
 extends CharacterBody2D
 
 
+#
 # ============================================================
 # MOVEMENT
 # ============================================================
+#
 
 @export_category("Movement")
 
 @export var speed: float = 115.0
 
 
+#
 # ============================================================
 # MOUSE HOLES
 # ============================================================
+#
 
 @export_category("Mouse Holes")
 
@@ -20,37 +24,33 @@ extends CharacterBody2D
 @export var mouse_hole_reach_distance: float = 1.0
 
 # Only consider entry holes roughly on the enemy's current level.
-#
-# This prevents a hole directly above/below the mouse from being
-# considered the "nearest" entry hole.
-@export var hole_vertical_tolerance: float = 15.0
+@export var hole_vertical_tolerance: float = 2.0
 
-# If the player and hole are roughly the same distance away,
-# chase the player.
-#
-# A hole needs to beat the player by this many pixels before
+# A hole must beat the player by this many pixels before
 # the enemy chooses the hole.
 @export var chase_priority_margin: float = 5.0
 
 # How long the enemy disappears while traveling underground.
 @export var teleport_delay: float = 0.35
 
-# Prevent immediately diving back into the hole after appearing.
+# Prevent immediately diving back into a hole after appearing.
 @export var teleport_cooldown: float = 0.8
 
 
+#
 # ============================================================
 # ATTACK
 # ============================================================
+#
 
 @export_category("Attack")
 
 @export var attack_damage: int = 25
 
-# Horizontal attack distance.
+# Horizontal attack distance for the player.
 @export var attack_range_x: float = 15.0
 
-# Vertical attack distance.
+# Vertical attack distance for the player.
 @export var attack_range_y: float = 5.0
 
 @export var attack_cooldown: float = 0.5
@@ -62,15 +62,34 @@ extends CharacterBody2D
 @export var attack_active_frames: Array[int] = [4, 5]
 
 
+#
+# ============================================================
+# STUN
+# ============================================================
+#
+
+@export_category("Stun")
+
+@export var default_stun_duration: float = 1
+
+#
+# Name of the animation on the StunIndicator AnimatedSprite2D.
+#
+@export var stun_indicator_animation: StringName = &"Stun"
+
+
+#
 # ============================================================
 # AI
 # ============================================================
+#
 
 enum AIState {
 	CHASING,
 	SEEKING_HOLE,
 	TELEPORTING,
-	ATTACKING
+	ATTACKING,
+	STUNNED
 }
 
 
@@ -78,15 +97,32 @@ var ai_state: AIState = AIState.CHASING
 
 var target_hole: MouseHole = null
 
+#
+# The thing currently being attacked.
+#
+# Normally this is the player, but it can also be a Pumpkin.
+#
+var attack_target: Node2D = null
+
+
+#
+# ============================================================
+# TIMERS
+# ============================================================
+#
+
 var teleport_cooldown_remaining: float = 0.0
 var attack_cooldown_remaining: float = 0.0
+var stun_remaining: float = 0.0
 
 var attack_damage_applied: bool = false
 
 
+#
 # ============================================================
 # MOVEMENT MODIFIERS
 # ============================================================
+#
 
 var movement_multiplier: float = 1.0
 
@@ -94,16 +130,20 @@ var slow_zone_count: int = 0
 var slow_zone_multiplier: float = 1.0
 
 
+#
 # ============================================================
 # PLAYER
 # ============================================================
+#
 
 var player: CharacterBody2D = null
 
 
+#
 # ============================================================
 # NODES
 # ============================================================
+#
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -117,10 +157,20 @@ var player: CharacterBody2D = null
 	$AttackHitbox
 )
 
+#
+# This node is optional while you're setting it up.
+#
+@onready var stun_indicator: AnimatedSprite2D = (
+	get_node_or_null("StunIndicator")
+	as AnimatedSprite2D
+)
 
+
+#
 # ============================================================
 # READY
 # ============================================================
+#
 
 func _ready() -> void:
 	player = (
@@ -140,10 +190,15 @@ func _ready() -> void:
 
 	attack_hitbox.monitoring = true
 
+	if stun_indicator != null:
+		stun_indicator.visible = false
 
+
+#
 # ============================================================
 # PHYSICS
 # ============================================================
+#
 
 func _physics_process(delta: float) -> void:
 	update_timers(delta)
@@ -156,6 +211,16 @@ func _physics_process(delta: float) -> void:
 		return
 
 	apply_gravity(delta)
+
+	#
+	# While stunned, gravity still works, but the enemy
+	# cannot walk, attack, or use mouse holes.
+	#
+	if ai_state == AIState.STUNNED:
+		velocity.x = 0.0
+		update_animation()
+		move_and_slide()
+		return
 
 	if player == null:
 		velocity.x = 0.0
@@ -176,14 +241,19 @@ func _physics_process(delta: float) -> void:
 		AIState.TELEPORTING:
 			pass
 
+		AIState.STUNNED:
+			pass
+
 	update_animation()
 
 	move_and_slide()
 
 
+#
 # ============================================================
 # TIMERS
 # ============================================================
+#
 
 func update_timers(delta: float) -> void:
 	if teleport_cooldown_remaining > 0.0:
@@ -192,6 +262,7 @@ func update_timers(delta: float) -> void:
 		if teleport_cooldown_remaining < 0.0:
 			teleport_cooldown_remaining = 0.0
 
+
 	if attack_cooldown_remaining > 0.0:
 		attack_cooldown_remaining -= delta
 
@@ -199,28 +270,43 @@ func update_timers(delta: float) -> void:
 			attack_cooldown_remaining = 0.0
 
 
+	if stun_remaining > 0.0:
+		stun_remaining -= delta
+
+		if stun_remaining <= 0.0:
+			stun_remaining = 0.0
+
+			end_stun()
+
+
+#
 # ============================================================
 # GRAVITY
 # ============================================================
+#
 
 func apply_gravity(delta: float) -> void:
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 
 
+#
 # ============================================================
 # CHASING
 # ============================================================
+#
 
 func update_chasing() -> void:
 	#
-	# Attacking always wins.
+	# Player attack gets highest priority.
 	#
 	if can_attack_player():
 		start_attack()
 		return
 
-	var nearest_hole: MouseHole = find_nearest_entry_hole()
+	var nearest_hole: MouseHole = (
+		find_nearest_entry_hole()
+	)
 
 	#
 	# No usable holes means we just chase.
@@ -254,8 +340,6 @@ func update_chasing() -> void:
 	#
 	# Player gets priority when distances are close.
 	#
-	# A hole must be clearly closer before we use it.
-	#
 	if (
 		player_distance
 		<= hole_distance + chase_priority_margin
@@ -267,14 +351,19 @@ func update_chasing() -> void:
 	# Hole is clearly closer.
 	#
 	target_hole = nearest_hole
+
 	ai_state = AIState.SEEKING_HOLE
 
-	move_to_mouse_hole(target_hole)
+	move_to_mouse_hole(
+		target_hole
+	)
 
 
+#
 # ============================================================
 # CHASE PLAYER
 # ============================================================
+#
 
 func chase_player() -> void:
 	var horizontal_difference: float = (
@@ -290,12 +379,26 @@ func chase_player() -> void:
 		velocity.x = 0.0
 		return
 
-	set_facing_direction(direction)
+	set_facing_direction(
+		direction
+	)
+
+	#
+	# If a pumpkin is directly in front of the enemy,
+	# attack it instead of trying to walk through it.
+	#
+	if try_attack_blocking_pumpkin(
+		direction
+	):
+		return
 
 	#
 	# Check the floor directly in front of the enemy.
 	#
-	update_floor_check(direction)
+	update_floor_check(
+		direction
+	)
+
 	floor_check.force_raycast_update()
 
 	#
@@ -313,36 +416,45 @@ func chase_player() -> void:
 	#
 	# There is a ledge.
 	#
-	# We cannot jump, so now a mouse hole becomes necessary.
+	# Enemy cannot jump, so a mouse hole becomes necessary.
 	#
 	velocity.x = 0.0
 
 	if teleport_cooldown_remaining > 0.0:
 		return
 
-	var hole: MouseHole = find_nearest_entry_hole()
+	var hole: MouseHole = (
+		find_nearest_entry_hole()
+	)
 
 	if hole == null:
 		return
 
 	target_hole = hole
+
 	ai_state = AIState.SEEKING_HOLE
 
-	move_to_mouse_hole(target_hole)
+	move_to_mouse_hole(
+		target_hole
+	)
 
 
+#
 # ============================================================
 # SEEKING HOLE
 # ============================================================
+#
 
 func update_seeking_hole() -> void:
 	#
-	# Player got close enough to attack while we were walking
-	# toward the hole.
+	# Player got close enough to attack while we were
+	# walking toward the hole.
 	#
 	if can_attack_player():
 		target_hole = null
+
 		start_attack()
+
 		return
 
 	if target_hole == null:
@@ -351,7 +463,9 @@ func update_seeking_hole() -> void:
 
 	if not is_instance_valid(target_hole):
 		target_hole = null
+
 		ai_state = AIState.CHASING
+
 		return
 
 	#
@@ -383,22 +497,31 @@ func update_seeking_hole() -> void:
 		# Only abandon the hole if we can actually continue
 		# walking toward the player.
 		#
-		if has_floor_ahead(direction_to_player):
+		if has_floor_ahead(
+			direction_to_player
+		):
 			target_hole = null
+
 			ai_state = AIState.CHASING
 
 			chase_player()
+
 			return
 
-	move_to_mouse_hole(target_hole)
+	move_to_mouse_hole(
+		target_hole
+	)
 
 
+#
 # ============================================================
 # FIND NEAREST ENTRY HOLE
 # ============================================================
+#
 
 func find_nearest_entry_hole() -> MouseHole:
 	var best_hole: MouseHole = null
+
 	var best_distance: float = INF
 
 	var nodes: Array[Node] = (
@@ -408,20 +531,26 @@ func find_nearest_entry_hole() -> MouseHole:
 	)
 
 	for node: Node in nodes:
-		var hole: MouseHole = node as MouseHole
+		var hole: MouseHole = (
+			node as MouseHole
+		)
 
 		if hole == null:
 			continue
 
 		#
-		# Entry hole should be approximately on our level.
+		# Entry hole should be approximately
+		# on our current level.
 		#
 		var vertical_distance: float = absf(
 			hole.global_position.y
 			- global_position.y
 		)
 
-		if vertical_distance > hole_vertical_tolerance:
+		if (
+			vertical_distance
+			> hole_vertical_tolerance
+		):
 			continue
 
 		var distance: float = (
@@ -432,26 +561,33 @@ func find_nearest_entry_hole() -> MouseHole:
 
 		if distance < best_distance:
 			best_distance = distance
+
 			best_hole = hole
 
 	return best_hole
 
 
+#
 # ============================================================
 # MOVE TO HOLE
 # ============================================================
+#
 
 func move_to_mouse_hole(
 	hole: MouseHole
 ) -> void:
 	if hole == null:
 		target_hole = null
+
 		ai_state = AIState.CHASING
+
 		return
 
 	if not is_instance_valid(hole):
 		target_hole = null
+
 		ai_state = AIState.CHASING
+
 		return
 
 	var horizontal_difference: float = (
@@ -466,8 +602,14 @@ func move_to_mouse_hole(
 	#
 	# Reached the mouse hole.
 	#
-	if horizontal_distance <= mouse_hole_reach_distance:
-		enter_mouse_hole(hole)
+	if (
+		horizontal_distance
+		<= mouse_hole_reach_distance
+	):
+		enter_mouse_hole(
+			hole
+		)
+
 		return
 
 	var direction: float = signf(
@@ -475,18 +617,37 @@ func move_to_mouse_hole(
 	)
 
 	if direction == 0.0:
-		enter_mouse_hole(hole)
+		enter_mouse_hole(
+			hole
+		)
+
 		return
 
-	set_facing_direction(direction)
+	set_facing_direction(
+		direction
+	)
+
+	#
+	# If a pumpkin blocks the enemy on the way to a
+	# mouse hole, destroy it too.
+	#
+	if try_attack_blocking_pumpkin(
+		direction
+	):
+		return
 
 	#
 	# Don't blindly walk off a cliff trying to reach a hole.
 	#
-	if not has_floor_ahead(direction):
+	if not has_floor_ahead(
+		direction
+	):
 		target_hole = null
+
 		ai_state = AIState.CHASING
+
 		velocity.x = 0.0
+
 		return
 
 	velocity.x = (
@@ -496,9 +657,11 @@ func move_to_mouse_hole(
 	)
 
 
+#
 # ============================================================
 # ENTER MOUSE HOLE
 # ============================================================
+#
 
 func enter_mouse_hole(
 	entry_hole: MouseHole
@@ -506,9 +669,14 @@ func enter_mouse_hole(
 	if ai_state == AIState.TELEPORTING:
 		return
 
+	if ai_state == AIState.STUNNED:
+		return
+
 	if teleport_cooldown_remaining > 0.0:
 		target_hole = null
+
 		ai_state = AIState.CHASING
+
 		return
 
 	var exit_hole: MouseHole = (
@@ -519,12 +687,17 @@ func enter_mouse_hole(
 
 	if exit_hole == null:
 		target_hole = null
+
 		ai_state = AIState.CHASING
+
 		return
 
 	ai_state = AIState.TELEPORTING
 
 	target_hole = null
+
+	attack_target = null
+
 	velocity = Vector2.ZERO
 
 	#
@@ -562,22 +735,27 @@ func enter_mouse_hole(
 	attack_hitbox.monitoring = true
 
 	#
-	# Force the mouse to chase for a little while after
-	# emerging instead of immediately selecting another hole.
+	# Force the enemy to chase for a little while
+	# after emerging.
 	#
-	teleport_cooldown_remaining = teleport_cooldown
+	teleport_cooldown_remaining = (
+		teleport_cooldown
+	)
 
 	ai_state = AIState.CHASING
 
 
+#
 # ============================================================
 # FIND EXIT CLOSEST TO PLAYER
 # ============================================================
+#
 
 func find_exit_hole_closest_to_player(
 	entry_hole: MouseHole
 ) -> MouseHole:
 	var best_hole: MouseHole = null
+
 	var best_distance: float = INF
 
 	var nodes: Array[Node] = (
@@ -587,7 +765,9 @@ func find_exit_hole_closest_to_player(
 	)
 
 	for node: Node in nodes:
-		var hole: MouseHole = node as MouseHole
+		var hole: MouseHole = (
+			node as MouseHole
+		)
 
 		if hole == null:
 			continue
@@ -610,17 +790,23 @@ func find_exit_hole_closest_to_player(
 
 		if distance_to_player < best_distance:
 			best_distance = distance_to_player
+
 			best_hole = hole
 
 	return best_hole
 
 
+#
 # ============================================================
-# ATTACK
+# PLAYER ATTACK CHECK
 # ============================================================
+#
 
 func can_attack_player() -> bool:
 	if player == null:
+		return false
+
+	if ai_state == AIState.STUNNED:
 		return false
 
 	if attack_cooldown_remaining > 0.0:
@@ -648,33 +834,72 @@ func can_attack_player() -> bool:
 	return true
 
 
-func start_attack() -> void:
-	if player == null:
+#
+# ============================================================
+# START ATTACK
+# ============================================================
+#
+
+func start_attack(
+	target: Node2D = null
+) -> void:
+	#
+	# No explicit target means attack the player.
+	#
+	if target == null:
+		target = player
+
+	if target == null:
+		return
+
+	if not is_instance_valid(target):
+		return
+
+	if ai_state == AIState.STUNNED:
 		return
 
 	ai_state = AIState.ATTACKING
 
 	target_hole = null
+
+	attack_target = target
+
 	velocity.x = 0.0
 
 	attack_damage_applied = false
 
 	var direction: float = signf(
-		player.global_position.x
+		target.global_position.x
 		- global_position.x
 	)
 
 	if direction != 0.0:
-		set_facing_direction(direction)
+		set_facing_direction(
+			direction
+		)
 
-	update_attack_hitbox_position(direction)
+	update_attack_hitbox_position(
+		direction
+	)
 
 	sprite.play("Attack")
 
 
+#
+# ============================================================
+# UPDATE ATTACK
+# ============================================================
+#
+
 func update_attacking() -> void:
 	velocity.x = 0.0
 
+
+#
+# ============================================================
+# ATTACK HITBOX POSITION
+# ============================================================
+#
 
 func update_attack_hitbox_position(
 	direction: float
@@ -682,6 +907,7 @@ func update_attack_hitbox_position(
 	if direction == 0.0:
 		if sprite.flip_h:
 			direction = -1.0
+
 		else:
 			direction = 1.0
 
@@ -691,9 +917,57 @@ func update_attack_hitbox_position(
 	)
 
 
+#
+# ============================================================
+# PUMPKIN DETECTION
+# ============================================================
+#
+
+func try_attack_blocking_pumpkin(
+	direction: float
+) -> bool:
+	if direction == 0.0:
+		return false
+
+	if ai_state == AIState.STUNNED:
+		return false
+
+	if attack_cooldown_remaining > 0.0:
+		return false
+
+	#
+	# Put the hitbox in front of the enemy.
+	#
+	update_attack_hitbox_position(
+		direction
+	)
+
+	#
+	# Make sure the transform is current before
+	# asking for overlapping bodies.
+	#
+	attack_hitbox.force_update_transform()
+
+	var bodies := (
+		attack_hitbox.get_overlapping_bodies()
+	)
+
+	for body: Node2D in bodies:
+		if body is Pumpkin:
+			start_attack(
+				body
+			)
+
+			return true
+
+	return false
+
+
+#
 # ============================================================
 # ATTACK ANIMATION
 # ============================================================
+#
 
 func _on_sprite_frame_changed() -> void:
 	if ai_state != AIState.ATTACKING:
@@ -711,29 +985,65 @@ func _on_sprite_frame_changed() -> void:
 	try_apply_attack_damage()
 
 
+#
+# ============================================================
+# APPLY ATTACK
+# ============================================================
+#
+
 func try_apply_attack_damage() -> void:
-	if player == null:
+	if attack_target == null:
+		return
+
+	if not is_instance_valid(attack_target):
+		attack_target = null
 		return
 
 	var bodies := (
 		attack_hitbox.get_overlapping_bodies()
 	)
 
-	for body in bodies:
-		if body != player:
+	for body: Node2D in bodies:
+		if body != attack_target:
 			continue
 
-		if not body.has_method("take_damage"):
-			continue
+		#
+		# ====================================================
+		# PUMPKIN
+		# ====================================================
+		#
+		# Enemy destroys pumpkins in one hit.
+		#
+		if body is Pumpkin:
+			body.destroy()
 
-		body.take_damage(
-			attack_damage
-		)
+			attack_damage_applied = true
 
-		attack_damage_applied = true
+			attack_target = null
 
-		return
+			return
 
+		#
+		# ====================================================
+		# PLAYER / OTHER DAMAGEABLE OBJECT
+		# ====================================================
+		#
+
+		if body.has_method("take_damage"):
+			body.take_damage(
+				attack_damage
+			)
+
+			attack_damage_applied = true
+
+			return
+
+
+#
+# ============================================================
+# ATTACK ANIMATION FINISHED
+# ============================================================
+#
 
 func _on_sprite_animation_finished() -> void:
 	if sprite.animation != "Attack":
@@ -744,6 +1054,8 @@ func _on_sprite_animation_finished() -> void:
 
 	attack_damage_applied = false
 
+	attack_target = null
+
 	attack_cooldown_remaining = (
 		attack_cooldown
 	)
@@ -751,9 +1063,121 @@ func _on_sprite_animation_finished() -> void:
 	ai_state = AIState.CHASING
 
 
+#
+# ============================================================
+# STUN
+# ============================================================
+#
+
+func stun(
+	duration: float = -1.0
+) -> void:
+	#
+	# Enemy cannot be hit while underground.
+	#
+	if ai_state == AIState.TELEPORTING:
+		return
+
+	if duration <= 0.0:
+		duration = default_stun_duration
+
+	#
+	# If hit again while already stunned, reset/extend
+	# the timer to the new duration.
+	#
+	stun_remaining = duration
+
+	ai_state = AIState.STUNNED
+
+	target_hole = null
+
+	attack_target = null
+
+	velocity.x = 0.0
+
+	attack_damage_applied = false
+
+	#
+	# Stop whatever combat animation was running.
+	#
+	sprite.play("Idle")
+
+	#
+	# Enemy cannot deal damage while stunned.
+	#
+	attack_hitbox.set_deferred(
+		"monitoring",
+		false
+	)
+
+	show_stun_indicator()
+
+
+#
+# ============================================================
+# END STUN
+# ============================================================
+#
+
+func end_stun() -> void:
+	if ai_state != AIState.STUNNED:
+		return
+
+	stun_remaining = 0.0
+
+	hide_stun_indicator()
+
+	attack_hitbox.set_deferred(
+		"monitoring",
+		true
+	)
+
+	#
+	# Prevent an instantaneous attack on the exact frame
+	# the stun ends.
+	#
+	attack_cooldown_remaining = maxf(
+		attack_cooldown_remaining,
+		0.25
+	)
+
+	ai_state = AIState.CHASING
+
+
+#
+# ============================================================
+# STUN INDICATOR
+# ============================================================
+#
+
+func show_stun_indicator() -> void:
+	if stun_indicator == null:
+		return
+
+	stun_indicator.visible = true
+
+	if stun_indicator.sprite_frames.has_animation(
+		stun_indicator_animation
+	):
+		stun_indicator.play(
+			stun_indicator_animation
+		)
+
+
+func hide_stun_indicator() -> void:
+	if stun_indicator == null:
+		return
+
+	stun_indicator.stop()
+
+	stun_indicator.visible = false
+
+
+#
 # ============================================================
 # FLOOR CHECK
 # ============================================================
+#
 
 func has_floor_ahead(
 	direction: float
@@ -761,7 +1185,9 @@ func has_floor_ahead(
 	if direction == 0.0:
 		return true
 
-	update_floor_check(direction)
+	update_floor_check(
+		direction
+	)
 
 	floor_check.force_raycast_update()
 
@@ -776,9 +1202,11 @@ func update_floor_check(
 	)
 
 
+#
 # ============================================================
 # DIRECTION
 # ============================================================
+#
 
 func set_facing_direction(
 	direction: float
@@ -790,15 +1218,27 @@ func set_facing_direction(
 		sprite.flip_h = false
 
 
+#
 # ============================================================
 # ANIMATION
 # ============================================================
+#
 
 func update_animation() -> void:
 	if ai_state == AIState.ATTACKING:
 		return
 
 	if ai_state == AIState.TELEPORTING:
+		return
+
+	#
+	# Keep the regular enemy sprite idle while stunned.
+	# The StunIndicator handles the visual stun effect.
+	#
+	if ai_state == AIState.STUNNED:
+		if sprite.animation != "Idle":
+			sprite.play("Idle")
+
 		return
 
 	if absf(velocity.x) > 1.0:
@@ -808,9 +1248,11 @@ func update_animation() -> void:
 		sprite.play("Idle")
 
 
+#
 # ============================================================
 # SLOW ZONES
 # ============================================================
+#
 
 func enter_slow_zone(
 	multiplier: float
@@ -818,7 +1260,10 @@ func enter_slow_zone(
 	slow_zone_count += 1
 
 	slow_zone_multiplier = multiplier
-	movement_multiplier = slow_zone_multiplier
+
+	movement_multiplier = (
+		slow_zone_multiplier
+	)
 
 
 func exit_slow_zone() -> void:
@@ -831,14 +1276,18 @@ func exit_slow_zone() -> void:
 		movement_multiplier = 1.0
 
 
+#
 # ============================================================
 # DAMAGE
 # ============================================================
+#
 
 func take_damage(
 	_amount: int
 ) -> void:
 	#
-	# Enemy remains invulnerable.
+	# Enemy remains invulnerable to regular damage.
+	#
+	# Pumpkins use stun() instead.
 	#
 	pass

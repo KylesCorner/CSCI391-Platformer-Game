@@ -1,17 +1,77 @@
-[gd_scene format=3 uid="uid://dkdy5yhnptxly"]
+[gd_scene format=3 uid="uid://bmf8oubuvpx17"]
 
-[ext_resource type="Texture2D" uid="uid://dd1hstfirwyxg" path="res://assets/world_tileset.png" id="1_fy8b1"]
+[ext_resource type="Script" uid="uid://dyuawysygrr1t" path="res://scripts/pumpkin.gd" id="1_ch6vm"]
+[ext_resource type="Texture2D" uid="uid://bdaut2bg8i6c8" path="res://assets/smoke/FX001_01.png" id="2_wx4lb"]
+[ext_resource type="Texture2D" uid="uid://doxbkmelre0v8" path="res://assets/smoke/FX001_02.png" id="3_fnlu4"]
+[ext_resource type="Texture2D" uid="uid://dl8y6df6u4uc" path="res://assets/smoke/FX001_03.png" id="4_r4v7c"]
+[ext_resource type="Texture2D" uid="uid://dixk2gdpesn6j" path="res://assets/smoke/FX001_04.png" id="5_s1f5v"]
+[ext_resource type="Texture2D" uid="uid://ditkeoq7mcx76" path="res://assets/smoke/FX001_05.png" id="6_qys4q"]
+[ext_resource type="Texture2D" uid="uid://ctrf46qpu7uwc" path="res://assets/pumpkin.png" id="7_ye8ba"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_28di1"]
-size = Vector2(24, 23)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wx4lb"]
+size = Vector2(16, 14)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mwcw5"]
+atlas = ExtResource("2_wx4lb")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_onktr"]
+atlas = ExtResource("3_fnlu4")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6qvu7"]
+atlas = ExtResource("4_r4v7c")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_167vb"]
+atlas = ExtResource("5_s1f5v")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_78lor"]
+atlas = ExtResource("6_qys4q")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g4hg0"]
+atlas = ExtResource("7_ye8ba")
+region = Rect2(0, 0, 16, 15)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_28di1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mwcw5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_onktr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6qvu7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_167vb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_78lor")
+}],
+"loop": 0,
+"name": &"Destroy",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g4hg0")
+}],
+"loop": 0,
+"name": &"Idle",
+"speed": 1.0
+}]
 
 [node name="Pumpkin" type="RigidBody2D" unique_id=865692775]
+script = ExtResource("1_ch6vm")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=138146118]
-shape = SubResource("RectangleShape2D_28di1")
+shape = SubResource("RectangleShape2D_wx4lb")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=658031123]
-scale = Vector2(1.5, 1.5)
-texture = ExtResource("1_fy8b1")
-region_enabled = true
-region_rect = Rect2(63.943367, 128.75891, 16.277672, 14.97084)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=268016755]
+sprite_frames = SubResource("SpriteFrames_28di1")
+animation = &"Idle"

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b1ug8xpu6ixg0" path="res://scripts/enemy.gd" id="1_4gyqm"]
 [ext_resource type="Texture2D" uid="uid://b383xrxljp66j" path="res://assets/goblin_scout_v5_weapons_dagger_1_silhouette.png" id="2_qi2p4"]
+[ext_resource type="Texture2D" uid="uid://dota1c82nejem" path="res://assets/timer.png" id="3_4ra3w"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2hox4"]
 atlas = ExtResource("2_qi2p4")
@@ -189,6 +190,49 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_5uy6h"]
+atlas = ExtResource("3_4ra3w")
+region = Rect2(0, 0, 47, 47)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c4w8v"]
+atlas = ExtResource("3_4ra3w")
+region = Rect2(47, 0, 47, 47)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xwavj"]
+atlas = ExtResource("3_4ra3w")
+region = Rect2(94, 0, 47, 47)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nenq2"]
+atlas = ExtResource("3_4ra3w")
+region = Rect2(141, 0, 47, 47)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_md484"]
+atlas = ExtResource("3_4ra3w")
+region = Rect2(188, 0, 47, 47)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_28di1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5uy6h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c4w8v")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xwavj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nenq2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_md484")
+}],
+"loop": 1,
+"name": &"Stun",
+"speed": 5.0
+}]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_epg4t"]
 size = Vector2(13, 10)
 
@@ -203,6 +247,13 @@ position = Vector2(0, -2)
 scale = Vector2(0.59375, 0.59375)
 sprite_frames = SubResource("SpriteFrames_iifgy")
 animation = &"Attack"
+
+[node name="StunIndicator" type="AnimatedSprite2D" parent="." unique_id=1755209686]
+position = Vector2(4.7683716e-07, 0.9999999)
+scale = Vector2(0.47340423, 0.47340423)
+sprite_frames = SubResource("SpriteFrames_28di1")
+animation = &"Stun"
+frame_progress = 0.07389953
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1409489131]
 position = Vector2(0.5, 0)
