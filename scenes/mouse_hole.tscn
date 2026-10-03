@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cvmrf0ms04ayf"]
+
+[ext_resource type="Script" uid="uid://bujy1u2eydsis" path="res://scripts/MouseHole.gd" id="1_2a0bd"]
+[ext_resource type="Texture2D" uid="uid://dd1hstfirwyxg" path="res://assets/world_tileset.png" id="2_6ayao"]
+
+[node name="MouseHole" type="Marker2D" unique_id=758813413]
+script = ExtResource("1_2a0bd")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=980818684]
+position = Vector2(-2.3841858e-06, 2.7418137e-06)
+scale = Vector2(0.85694444, 0.85694444)
+texture = ExtResource("2_6ayao")
+region_enabled = true
+region_rect = Rect2(111.869095, 127.75875, 16.346664, 16.565178)
+
+[node name="ExitPoint" type="Marker2D" parent="." unique_id=1244695115]
+position = Vector2(0, 1)

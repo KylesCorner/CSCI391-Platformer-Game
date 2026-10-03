@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://d1463ajrxw4ss"]
+
+[ext_resource type="Script" uid="uid://db5rvkiyvmrcs" path="res://scripts/bush.gd" id="1_8cy4n"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_28u5p"]
+load_path = "res://.godot/imported/world_tileset.png-43b294f106264424c84ae223dbce0789.ctex"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ilexf"]
+size = Vector2(17, 18)
+
+[node name="Bush" type="Area2D" unique_id=1824502961]
+script = ExtResource("1_8cy4n")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=613596522]
+position = Vector2(0.5, 0)
+texture = SubResource("CompressedTexture2D_28u5p")
+region_enabled = true
+region_rect = Rect2(95.84973, 95.77574, 16.613281, 16.781082)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=80304423]
+position = Vector2(0.5, 0)
+shape = SubResource("RectangleShape2D_ilexf")

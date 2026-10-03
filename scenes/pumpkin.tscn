@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://dkdy5yhnptxly"]
+
+[ext_resource type="Texture2D" uid="uid://dd1hstfirwyxg" path="res://assets/world_tileset.png" id="1_fy8b1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_28di1"]
+size = Vector2(24, 23)
+
+[node name="Pumpkin" type="RigidBody2D" unique_id=865692775]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=138146118]
+shape = SubResource("RectangleShape2D_28di1")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=658031123]
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("1_fy8b1")
+region_enabled = true
+region_rect = Rect2(63.943367, 128.75891, 16.277672, 14.97084)

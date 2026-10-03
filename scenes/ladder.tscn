@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://l77hcds3cxp5"]
+
+[ext_resource type="Script" uid="uid://b06py6s3achwr" path="res://scripts/ladder.gd" id="1_lqhsa"]
+[ext_resource type="Texture2D" uid="uid://e42fgqsaiml2" path="res://assets/Dungeon Tile Set.png" id="2_efw3x"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3kgug"]
+size = Vector2(14, 49)
+
+[node name="Ladder" type="Area2D" unique_id=1474640371]
+script = ExtResource("1_lqhsa")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1371886204]
+position = Vector2(1.5, 0.5)
+scale = Vector2(1, 2.6111112)
+texture = ExtResource("2_efw3x")
+region_enabled = true
+region_rect = Rect2(80.22861, 142.25468, 15.318573, 18.888657)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=985852827]
+position = Vector2(1.5, 0.5)
+shape = SubResource("RectangleShape2D_3kgug")
