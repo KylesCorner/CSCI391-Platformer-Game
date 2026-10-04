@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dd1hstfirwyxg" path="res://assets/world_tileset.png" id="1_r4t6t"]
 [ext_resource type="Script" uid="uid://jna7soqkgogi" path="res://scripts/PlayerSpawn.gd" id="2_3dkod"]
+[ext_resource type="PackedScene" uid="uid://i41erl2qb4v1" path="res://scenes/background.tscn" id="3_qoujf"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3dkod"]
 texture = ExtResource("1_r4t6t")
@@ -264,3 +265,5 @@ position = Vector2(-139, 70)
 [node name="Start" type="Marker2D" parent="SpawnPoints" unique_id=716995195]
 position = Vector2(-63, -160)
 script = ExtResource("2_3dkod")
+
+[node name="Background" parent="." unique_id=59338972 instance=ExtResource("3_qoujf")]
