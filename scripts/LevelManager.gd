@@ -5,6 +5,34 @@ var changing_level: bool = false
 
 
 #
+# The level selected from the main menu.
+#
+var starting_level: PackedScene = null
+
+
+#
+# ============================================================
+# STARTING LEVEL
+# ============================================================
+#
+
+func set_starting_level(
+	level: PackedScene
+) -> void:
+	starting_level = level
+
+
+func take_starting_level() -> PackedScene:
+	var level: PackedScene = (
+		starting_level
+	)
+
+	starting_level = null
+
+	return level
+
+
+#
 # ============================================================
 # CHANGE LEVEL
 # ============================================================
@@ -16,19 +44,21 @@ func change_level(
 	if changing_level:
 		return
 
+
 	if next_level == null:
 		push_error(
 			"Attempted to load a null level."
 		)
+
 		return
+
 
 	changing_level = true
 
+
 	#
-	# LevelExit.body_entered() happens during a physics callback.
-	#
-	# Do not remove collision objects until that callback has
-	# finished.
+	# Level changes may be triggered during physics callbacks.
+	# Delay the actual scene manipulation until it is safe.
 	#
 	call_deferred(
 		"_change_level_deferred",
@@ -45,7 +75,10 @@ func change_level(
 func _change_level_deferred(
 	next_level: PackedScene
 ) -> void:
-	var main: Node = get_tree().current_scene
+	var main: Node = (
+		get_tree().current_scene
+	)
+
 
 	if main == null:
 		push_error(
@@ -53,6 +86,7 @@ func _change_level_deferred(
 		)
 
 		changing_level = false
+
 		return
 
 
@@ -68,12 +102,14 @@ func _change_level_deferred(
 		)
 	)
 
+
 	if level_container == null:
 		push_error(
 			"Main does not contain CurrentLevel."
 		)
 
 		changing_level = false
+
 		return
 
 
@@ -90,12 +126,14 @@ func _change_level_deferred(
 		as CharacterBody2D
 	)
 
+
 	if player == null:
 		push_error(
 			"LevelManager could not find the player."
 		)
 
 		changing_level = false
+
 		return
 
 
@@ -106,16 +144,11 @@ func _change_level_deferred(
 	#
 
 	for child: Node in level_container.get_children():
-		#
-		# queue_free() is deferred and safe.
-		#
-		# Do NOT manually remove_child() here.
-		#
 		child.queue_free()
 
 
 	#
-	# Give Godot time to actually delete the old level.
+	# Allow queued nodes to actually be removed.
 	#
 	await get_tree().process_frame
 
@@ -130,13 +163,14 @@ func _change_level_deferred(
 		next_level.instantiate()
 	)
 
+
 	level_container.add_child(
 		new_level
 	)
 
 
 	#
-	# Give the new scene time to enter the tree.
+	# Allow the new scene to enter the tree.
 	#
 	await get_tree().process_frame
 
@@ -145,16 +179,6 @@ func _change_level_deferred(
 	# ========================================================
 	# FIND PLAYER SPAWN
 	# ========================================================
-	#
-	# Every level should contain:
-	#
-	# Level
-	# └── SpawnPoints
-	#     └── Start
-	#
-	# This is much more reliable than searching the entire
-	# scene tree for whichever player_spawn happens to appear
-	# first.
 	#
 
 	var spawn: Marker2D = (
@@ -171,19 +195,14 @@ func _change_level_deferred(
 		)
 
 	else:
-		#
-		# Move persistent player into the new level.
-		#
 		player.global_position = (
 			spawn.global_position
 		)
 
-		player.velocity = Vector2.ZERO
+		player.velocity = (
+			Vector2.ZERO
+		)
 
-		#
-		# Prevent interpolation from visually smearing the
-		# player from the old position to the new position.
-		#
 		player.reset_physics_interpolation()
 
 

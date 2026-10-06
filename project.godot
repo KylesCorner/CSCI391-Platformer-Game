@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Crappy Platformer"
-run/main_scene="uid://cmumeevps4lie"
+run/main_scene="uid://bnypxsmuyetnc"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
 [autoload]
